@@ -37,7 +37,7 @@ export const embeddingService = {
     }
 
     // Replace with a valid embedding model in OpenRouter, or default
-    const model = process.env.EMBEDDING_MODEL || "jinaai/jina-embeddings-v2-base-en";
+    const model = process.env.EMBEDDING_MODEL || "nomic-ai/nomic-embed-text";
 
     try {
       const payload = {
@@ -91,7 +91,7 @@ export const embeddingService = {
           metadata,
           isActive: true
         },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: 'after' }
       );
     } catch (error) {
       console.error(`Failed to upsert embedding for ${sourceType} ${sourceId}:`, error);

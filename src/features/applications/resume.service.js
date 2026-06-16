@@ -16,6 +16,15 @@ export const uploadResume = async (userId, file) => {
     throw new AppError("User not found", 404);
   }
 
+  // Extract text from PDF buffer right now to avoid Cloudinary fetching issues later
+  let text = "";
+  try {
+    const pdfData = await pdfParse(file.buffer);
+    text = pdfData.text;
+  } catch (error) {
+    throw new AppError("Failed to parse PDF text. Please ensure it is a valid PDF document.", 400);
+  }
+
   let cloudRes;
   try {
     cloudRes = await uploadBufferToCloudinary(file.buffer, "lumora/resumes");
@@ -36,6 +45,7 @@ export const uploadResume = async (userId, file) => {
   user.resumeFileName = file.originalname;
   user.resumeUploadedAt = new Date();
   user.resumeAnalysis = null; 
+  user.resumeText = text;
 
   await user.save();
 
@@ -81,6 +91,7 @@ export const deleteResume = async (userId) => {
   user.resumeFileName = undefined;
   user.resumeUploadedAt = undefined;
   user.resumeAnalysis = undefined;
+  user.resumeText = undefined;
 
   await user.save();
 };
@@ -88,19 +99,12 @@ export const deleteResume = async (userId) => {
 export const analyzeResume = async (userId) => {
   const user = await User.findById(userId);
 
-  if (!user || !user.resumeUrl) {
-    throw new AppError("Please upload a resume first.", 400);
+  if (!user || !user.resumeText) {
+    throw new AppError("Please upload a valid resume first to analyze it.", 400);
   }
 
   try {
-    const response = await fetch(user.resumeUrl);
-    if (!response.ok) throw new Error("Failed to fetch PDF from Cloudinary");
-    
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    
-    const pdfData = await pdfParse(buffer);
-    const text = pdfData.text;
+    const text = user.resumeText;
 
     if (!text || text.trim().length < 50) {
       throw new AppError("PDF contains too little text to analyze.", 400);
