@@ -11,13 +11,6 @@ const authLimiter = rateLimit({
   max: 10, // Limit each IP to 10 requests per `window` (here, per 15 minutes)
   standardHeaders: true,
   legacyHeaders: false,
-  store: new RedisStore({
-    sendCommand: (...args) => {
-      if (!redisClient.isReady) return Promise.reject(new Error('Redis not ready'));
-      return redisClient.sendCommand(args);
-    },
-  }),
-  passOnStoreError: true,
   message: 'Too many login/register attempts from this IP, please try again after 15 minutes',
 });
 
@@ -26,13 +19,6 @@ const passwordResetLimiter = rateLimit({
   max: 10, // Increased to 10 for easier development/testing (was 3)
   standardHeaders: true,
   legacyHeaders: false,
-  store: new RedisStore({
-    sendCommand: (...args) => {
-      if (!redisClient.isReady) return Promise.reject(new Error('Redis not ready'));
-      return redisClient.sendCommand(args);
-    },
-  }),
-  passOnStoreError: true,
   message: 'Too many password reset requests from this IP, please try again after an hour',
 });
 

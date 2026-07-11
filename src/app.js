@@ -28,13 +28,6 @@ const limiter = rateLimit({
   max: 1000, // Increased to prevent self-inflicted DoS
   standardHeaders: true, 
   legacyHeaders: false, 
-  store: new RedisStore({
-    sendCommand: (...args) => {
-      if (!redisClient.isReady) return Promise.reject(new Error('Redis not ready'));
-      return redisClient.sendCommand(args);
-    },
-  }),
-  passOnStoreError: true,
   message: 'Too many requests from this IP, please try again after 15 minutes'
 });
 app.use('/api', limiter);
